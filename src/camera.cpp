@@ -1,0 +1,106 @@
+#include "camera.hpp"
+#include <iostream>
+
+Camera::Camera(int deviceId)
+    : deviceId_(deviceId), initialized_(false) {
+}
+
+Camera::~Camera(){
+    if (frameCapture_.isOpened()){
+        frameCapture_.release();
+    }
+    cv::destroyAllWindows();
+}
+
+bool Camera::initialize(){
+
+    frameCapture_.open(deviceId_);
+
+    if(!frameCapture_.isOpened()){
+        std::cerr << "Error: Could not open camera with deviceID: " 
+        << deviceId_ << std::endl;
+
+        return false;
+    }
+
+    std::cout << "Camera initialized successfully!" << std::endl;
+    std::cout << "Frame Width: " << frameCapture_.get(cv::CAP_PROP_FRAME_WIDTH) << std::endl;
+    std::cout << "Frame Height: " << frameCapture_.get(cv::CAP_PROP_FRAME_HEIGHT) << std::endl;
+    std::cout << "FPS: " << frameCapture_.get(cv::CAP_PROP_FPS) << std::endl;
+    
+    initialized_ = true;
+    return true;
+}
+
+void Camera::run(const std::string& windowName) {
+    if (!initialized_) {
+        std::cerr << "Error: Camera not initialized. Call initialize() first." << std::endl;
+        return;
+    }
+    
+    cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
+    
+    std::cout << "Starting webcam feed. Press 'q' or 'ESC' to quit." << std::endl;
+    
+    while (true) {
+        frameCapture_ >> frame_;
+        
+        if (frame_.empty()) {
+            std::cerr << "Error: Could not grab frame." << std::endl;
+            break;
+        }
+        
+        processFrame(frame_);
+        
+        cv::imshow(windowName, frame_);
+        
+        int key = cv::waitKey(1);
+        
+        if (key == 'q' || key == 'Q' || key == 27) {
+            std::cout << "Exiting..." << std::endl;
+            break;
+        }
+        
+        if (key == 's' || key == 'S') {
+            std::string filename = "captured_frame_" + 
+                                 std::to_string(cv::getTickCount()) + ".jpg";
+            cv::imwrite(filename, frame_);
+            std::cout << "Frame saved as: " << filename << std::endl;
+        }
+    }
+    
+    cv::destroyWindow(windowName);
+}
+
+bool Camera::isOpened() const {
+    return frameCapture_.isOpened();
+}
+
+bool Camera::setFrameWidth(int width) {
+    if (frameCapture_.isOpened()) {
+        frameCapture_.set(cv::CAP_PROP_FRAME_WIDTH, width);
+        return true;
+    }
+    return false;
+}
+
+bool Camera::setFrameHeight(int height) {
+    if (frameCapture_.isOpened()) {
+        frameCapture_.set(cv::CAP_PROP_FRAME_HEIGHT, height);
+        return true;
+    }
+    return false;
+}
+
+double Camera::getFPS() const {
+    if (frameCapture_.isOpened()) {
+        return frameCapture_.get(cv::CAP_PROP_FPS);
+    }
+    return 0.0;
+}
+
+void Camera::processFrame(cv::Mat& frame) {
+    std::string timestamp = "FPS: " + std::to_string(static_cast<int>(getFPS()));
+    cv::putText(frame, timestamp, cv::Point(10, 30), 
+                cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
+}
