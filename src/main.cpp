@@ -2,19 +2,16 @@
 #include <opencv2/core/utils/logger.hpp>
 #include <iostream>
 
+#define DEFAULT_DEVICE_ID 0
+
 int main(int argc, char** argv) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
-
-    std::cout << "=== OpenCV Webcam Capture ===" << std::endl;
+        
     
-    int deviceId = 0;
+    std::cout << "Using camera device ID: " << DEFAULT_DEVICE_ID << std::endl;
     
-    if (argc > 1) {
-        deviceId = std::atoi(argv[1]);
-        std::cout << "Using camera device ID: " << deviceId << std::endl;
-    }
     
-    Camera webcam(deviceId);
+    Camera webcam(DEFAULT_DEVICE_ID);
     
     if (!webcam.initialize()) {
         std::cerr << "Failed to initialize camera!" << std::endl;
