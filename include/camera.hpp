@@ -4,17 +4,15 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 
-class Camera{
-
-public: 
-
+class Camera {
+   public:
     explicit Camera(int deviceId = 0);
 
     ~Camera();
 
     bool initialize();
 
-    void run(const std::string& windowName = "Camera Feed");
+    void visualize(const std::string& windowName = "Camera Feed");
 
     bool isOpened() const;
 
@@ -24,13 +22,16 @@ public:
 
     double getFPS() const;
 
-private: 
+    cv::Mat getFrame();
+
+   private:
     cv::VideoCapture frameCapture_;
     int deviceId_;
-    cv::Mat frame_;
     bool initialized_;
-
-    void processFrame(cv::Mat& frame);
+    double currentFPS_;
+    int64 lastFrameTick_;
+    const double alphaFPS_ = 0.1;
+    void showFrame(cv::Mat& frame);
 };
 
 #endif
