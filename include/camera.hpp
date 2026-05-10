@@ -1,37 +1,29 @@
-#ifndef WEBCAM_CAPTURE_HPP
-#define WEBCAM_CAPTURE_HPP
+#pragma once
 
+#include <cstdint>
 #include <opencv2/opencv.hpp>
 #include <string>
 
 class Camera {
-   public:
-    explicit Camera(int deviceId = 0);
-
+ public:
+    explicit Camera(int device_id = 0);
     ~Camera();
 
-    bool initialize();
+    void Visualize(const std::string& window_name = "Camera Feed");
+    bool IsOpened() const;
+    bool SetFrameWidth(int width);
+    bool SetFrameHeight(int height);
+    double GetFps() const;
+    cv::Mat GetFrame();
 
-    void visualize(const std::string& windowName = "Camera Feed");
+ private:
+    static constexpr double kAlphaFps = 0.1;
 
-    bool isOpened() const;
+    cv::VideoCapture frame_capture_;
+    int device_id_;
+    double current_fps_ = 0.0;
+    int64_t last_frame_tick_ = 0;
 
-    bool setFrameWidth(int width);
-
-    bool setFrameHeight(int height);
-
-    double getFPS() const;
-
-    cv::Mat getFrame();
-
-   private:
-    cv::VideoCapture frameCapture_;
-    int deviceId_;
-    bool initialized_;
-    double currentFPS_;
-    int64 lastFrameTick_;
-    const double alphaFPS_ = 0.1;
-    void showFrame(cv::Mat& frame);
+    bool Initialize();
+    void AnnotateFrame(cv::Mat* frame);
 };
-
-#endif
