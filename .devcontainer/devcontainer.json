@@ -1,0 +1,29 @@
+{
+    "name": "ros2-deepstream-object-tracking",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "devcontainer",
+    "workspaceFolder": "/workspace",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "twxs.cmake",
+                "ms-vscode.cpptools-extension-pack",
+                "xaver.clang-format"
+            ],
+            "settings": {
+                "cmake.buildDirectory": "${workspaceFolder}/build",
+                "cmake.generator": "Ninja",
+                "C_Cpp.default.cppStandard": "c++23",
+                "C_Cpp.default.compilerPath": "/usr/bin/g++",
+                "editor.formatOnSave": true
+            }
+        }
+    },
+
+    "postCreateCommand": "cmake -S /workspace -B /workspace/build -G Ninja -DCMAKE_BUILD_TYPE=Debug",
+
+    "remoteUser": "dev"
+}
