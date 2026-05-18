@@ -12,8 +12,11 @@ services:
       - ..:/workspace
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /dev:/dev
+      - ${SSH_AUTH_SOCK:-/dev/null}:/ssh-agent
+      - ${HOME}/.ssh:/home/dev/.ssh:ro
     environment:
       - DISPLAY=${DISPLAY}
+      - SSH_AUTH_SOCK=/ssh-agent
     network_mode: host
     stdin_open: true
     tty: true

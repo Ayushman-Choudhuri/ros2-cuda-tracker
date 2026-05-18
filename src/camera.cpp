@@ -1,135 +1,127 @@
 #include "camera.hpp"
 
+#include <cstdint>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
-Camera::Camera(int deviceId) : deviceId_(deviceId), initialized_(false) {
-    if (!initialize()) {
+static constexpr int kDefaultWidth = 640;
+static constexpr int kDefaultHeight = 480;
+static constexpr int kFpsSampleCount = 4;
+
+Camera::Camera(int device_id) : device_id_(device_id) {
+    if (!Initialize()) {
         throw std::runtime_error("Failed to initialize camera with deviceId " +
-                                 std::to_string(deviceId));
+                                 std::to_string(device_id));
     }
 }
 
 Camera::~Camera() {
-    if (frameCapture_.isOpened()) {
-        frameCapture_.release();
+    if (frame_capture_.isOpened()) {
+        frame_capture_.release();
     }
-    cv::destroyAllWindows();
 }
 
-bool Camera::initialize() {
-    frameCapture_.open(deviceId_);
+bool Camera::Initialize() {
+    frame_capture_.open(device_id_);
 
-    if (!frameCapture_.isOpened()) {
-        std::cerr << "Error: Could not open camera with deviceID: " << deviceId_ << std::endl;
-
+    if (!frame_capture_.isOpened()) {
+        std::cerr << "Error: Could not open camera with deviceID: " << device_id_ << '\n';
         return false;
     }
 
-    std::cout << "Camera initialized successfully!" << std::endl;
-    int frameWidth = 640;
-    int frameHeight = 480;
-    int frameFPSSamples = 4;
+    std::cout << "Camera initialized successfully!\n";
 
-    frameCapture_.set(cv::CAP_PROP_FRAME_WIDTH, frameWidth);
-    frameCapture_.set(cv::CAP_PROP_FRAME_HEIGHT, frameHeight);
+    frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, kDefaultWidth);
+    frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, kDefaultHeight);
 
-    std::cout << "Frame Width: " << frameCapture_.get(cv::CAP_PROP_FRAME_WIDTH) << std::endl;
-    std::cout << "Frame Height: " << frameCapture_.get(cv::CAP_PROP_FRAME_HEIGHT) << std::endl;
+    std::cout << "Frame Width: " << frame_capture_.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
+    std::cout << "Frame Height: " << frame_capture_.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 
-    cv::Mat tempFrame;
-    auto start = cv::getTickCount();
-    for (int frameIndex = 0; frameIndex < frameFPSSamples; frameIndex++) {
-        frameCapture_ >> tempFrame;
+    cv::Mat temp_frame;
+    int64_t start = cv::getTickCount();
+    for (int i = 0; i < kFpsSampleCount; ++i) {
+        frame_capture_ >> temp_frame;
     }
-    auto end = cv::getTickCount();
-    double timeElapsed = (end - start) / cv::getTickFrequency();
-    double estimatedFPS = frameFPSSamples / timeElapsed;
+    int64_t end = cv::getTickCount();
+    double time_elapsed = (end - start) / cv::getTickFrequency();
 
-    std::cout << "FPS: " << estimatedFPS << std::endl;
+    if (time_elapsed > 0.0) {
+        current_fps_ = kFpsSampleCount / time_elapsed;
+        std::cout << "FPS: " << current_fps_ << '\n';
+    } else {
+        current_fps_ = 30.0;
+    }
 
-    lastFrameTick_ = cv::getTickCount();
-    currentFPS_ = estimatedFPS;
-
-    initialized_ = true;
+    last_frame_tick_ = cv::getTickCount();
     return true;
 }
 
-void Camera::visualize(const std::string& windowName) {
-    if (!initialized_) {
-        std::cerr << "Error: Camera not initialized" << std::endl;
-        return;
-    }
-
-    cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
-
-    std::cout << "Starting webcam feed. Press 'q' or 'ESC' to quit." << std::endl;
+void Camera::Visualize(const std::string& window_name) {
+    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+    std::cout << "Starting webcam feed. Press 'q' or 'ESC' to quit.\n";
 
     cv::Mat frame;
-
     while (true) {
-        frame = getFrame();
+        frame = GetFrame();
 
         if (frame.empty()) {
-            std::cerr << "Error: Could not grab frame." << std::endl;
+            std::cerr << "Error: Could not grab frame.\n";
             break;
         }
 
-        showFrame(frame);
-
-        cv::imshow(windowName, frame);
+        AnnotateFrame(&frame);
+        cv::imshow(window_name, frame);
 
         int key = cv::waitKey(1);
-
         if (key == 'q' || key == 'Q' || key == 27) {
-            std::cout << "Exiting..." << std::endl;
+            std::cout << "Exiting...\n";
             break;
         }
 
         if (key == 's' || key == 'S') {
-            std::string filename = "captured_frame_" + std::to_string(cv::getTickCount()) + ".jpg";
+            std::string filename =
+                "captured_frame_" + std::to_string(cv::getTickCount()) + ".jpg";
             cv::imwrite(filename, frame);
-            std::cout << "Frame saved as: " << filename << std::endl;
+            std::cout << "Frame saved as: " << filename << '\n';
         }
     }
 
-    cv::destroyWindow(windowName);
+    cv::destroyWindow(window_name);
 }
 
-bool Camera::isOpened() const { return frameCapture_.isOpened(); }
+bool Camera::IsOpened() const { return frame_capture_.isOpened(); }
 
-bool Camera::setFrameWidth(int width) {
-    if (frameCapture_.isOpened()) {
-        frameCapture_.set(cv::CAP_PROP_FRAME_WIDTH, width);
-        return true;
-    }
-    return false;
+bool Camera::SetFrameWidth(int width) {
+    return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, width);
 }
 
-bool Camera::setFrameHeight(int height) {
-    if (frameCapture_.isOpened()) {
-        frameCapture_.set(cv::CAP_PROP_FRAME_HEIGHT, height);
-        return true;
-    }
-    return false;
+bool Camera::SetFrameHeight(int height) {
+    return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, height);
 }
 
-void Camera::showFrame(cv::Mat& frame) {
-    std::string timestamp = "FPS: " + std::to_string(static_cast<float>(currentFPS_));
-    cv::putText(frame, timestamp, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7,
+double Camera::GetFps() const { return current_fps_; }
+
+void Camera::AnnotateFrame(cv::Mat* frame) {
+    std::ostringstream oss;
+    oss << "FPS: " << std::fixed << std::setprecision(1) << current_fps_;
+    cv::putText(*frame, oss.str(), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7,
                 cv::Scalar(0, 255, 0), 2);
 }
 
-cv::Mat Camera::getFrame() {
+cv::Mat Camera::GetFrame() {
     cv::Mat frame;
-    frameCapture_ >> frame;
+    frame_capture_ >> frame;
 
-    int64 currentTick = cv::getTickCount();
-    double timeDelta = (currentTick - lastFrameTick_) / cv::getTickFrequency();
-    double instantFPS = 1.0 / timeDelta;
+    int64_t current_tick = cv::getTickCount();
+    double time_delta = (current_tick - last_frame_tick_) / cv::getTickFrequency();
 
-    currentFPS_ = alphaFPS_ * instantFPS + (1.0 - alphaFPS_) * currentFPS_;
+    if (time_delta > 0.0) {
+        double instant_fps = 1.0 / time_delta;
+        current_fps_ = kAlphaFps * instant_fps + (1.0 - kAlphaFps) * current_fps_;
+    }
 
-    lastFrameTick_ = currentTick;
+    last_frame_tick_ = current_tick;
     return frame;
 }

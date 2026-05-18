@@ -19,7 +19,10 @@ ARG USER_GID=1000
 
 RUN groupadd --gid ${USER_GID} ${USERNAME} 2>/dev/null || true \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} \
-    && usermod -aG video ${USERNAME}
+    && usermod -aG video ${USERNAME} \
+    && mkdir -p /home/${USERNAME}/.ssh \
+    && chmod 700 /home/${USERNAME}/.ssh \
+    && chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.ssh
 
 USER ${USERNAME}
 

@@ -3,18 +3,14 @@
 
 #include "camera.hpp"
 
-#define DEFAULT_DEVICE_ID 4
+constexpr int kDefaultDeviceId = 4;
 
-int main(int argc, char** argv) {
+int main() {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
 
-    std::cout << "Using camera device ID: " << DEFAULT_DEVICE_ID << std::endl;
+    std::cout << "Using camera device ID: " << kDefaultDeviceId << '\n';
 
-    Camera webcam(DEFAULT_DEVICE_ID);
-
-    // cv::Mat frame = webcam.getFrame();
-
-    webcam.visualize("Camera feed");
-    // std::cout << "Application terminated successfully." << std::endl;
+    Camera webcam(kDefaultDeviceId);
+    webcam.Visualize("Camera feed");
     return 0;
 }

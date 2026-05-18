@@ -11,19 +11,26 @@
                 "ms-vscode.cmake-tools",
                 "twxs.cmake",
                 "ms-vscode.cpptools-extension-pack",
-                "xaver.clang-format"
+                "xaver.clang-format",
+                "llvm-vs-code-extensions.vscode-clangd"
             ],
             "settings": {
                 "cmake.buildDirectory": "${workspaceFolder}/build",
                 "cmake.generator": "Ninja",
                 "C_Cpp.default.cppStandard": "c++23",
                 "C_Cpp.default.compilerPath": "/usr/bin/g++",
-                "editor.formatOnSave": true
+                "C_Cpp.intelliSenseEngine": "disabled",
+                "editor.formatOnSave": true,
+                "clangd.arguments": [
+                    "--compile-commands-dir=${workspaceFolder}",
+                    "--clang-tidy",
+                    "--header-insertion=never"
+                ]
             }
         }
     },
 
-    "postCreateCommand": "cmake -S /workspace -B /workspace/build -G Ninja -DCMAKE_BUILD_TYPE=Debug",
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
 
     "remoteUser": "dev"
 }
