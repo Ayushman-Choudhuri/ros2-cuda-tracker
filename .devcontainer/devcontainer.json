@@ -11,7 +11,6 @@
                 "ms-vscode.cmake-tools",
                 "twxs.cmake",
                 "ms-vscode.cpptools-extension-pack",
-                "xaver.clang-format",
                 "llvm-vs-code-extensions.vscode-clangd"
             ],
             "settings": {
@@ -20,12 +19,8 @@
                 "C_Cpp.default.cppStandard": "c++23",
                 "C_Cpp.default.compilerPath": "/usr/bin/g++",
                 "C_Cpp.intelliSenseEngine": "disabled",
-                "editor.formatOnSave": true,
-                "clangd.arguments": [
-                    "--compile-commands-dir=${workspaceFolder}",
-                    "--clang-tidy",
-                    "--header-insertion=never"
-                ]
+                "editor.formatOnSave": false,
+                "terminal.integrated.defaultProfile.linux": "bash"
             }
         }
     },
