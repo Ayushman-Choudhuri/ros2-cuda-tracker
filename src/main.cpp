@@ -3,7 +3,7 @@
 
 #include "camera.hpp"
 
-constexpr int kDefaultDeviceId = 4;
+constexpr int kDefaultDeviceId = 0;
 
 int main() {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);

@@ -22,7 +22,8 @@ RUN groupadd --gid ${USER_GID} ${USERNAME} 2>/dev/null || true \
     && usermod -aG video ${USERNAME} \
     && mkdir -p /home/${USERNAME}/.ssh \
     && chmod 700 /home/${USERNAME}/.ssh \
-    && chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.ssh
+    && chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.ssh \
+    && chsh -s $(which bash) ${USERNAME}
 
 USER ${USERNAME}
 

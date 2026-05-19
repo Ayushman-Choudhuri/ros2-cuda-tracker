@@ -10,10 +10,8 @@ ninja-build
 git
 pkg-config
 curl
-
-# Linting and formatting
-clang-format
-clang-tidy
+ca-certificates
+openssh-client
 
 # Camera
 libv4l-dev
