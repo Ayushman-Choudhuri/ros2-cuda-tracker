@@ -1,6 +1,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
+#include <optional>
 #include <iostream>
 #include <stdio.h>
 
@@ -23,7 +24,7 @@ class VideoCaptureBase : public IInputSource {
         double getFps() const override { return current_fps_; }
 
     protected:
-        cv::VideoCapture cap;
+        cv::VideoCapture frame_capture_;
 
         void updateFps() {
             int64_t current_tick = cv::getTickCount();

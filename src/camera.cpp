@@ -1,127 +1,70 @@
+#include <cstdio>
+#include <iostream>
+#include <optional>
+#include <string>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/videoio.hpp>
+
+// include the interface file
 #include "camera.hpp"
 
-#include <cstdint>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
 
-static constexpr int kDefaultWidth = 640;
-static constexpr int kDefaultHeight = 480;
-static constexpr int kFpsSampleCount = 4;
-
-Camera::Camera(int device_id) : device_id_(device_id) {
-    if (!Initialize()) {
-        throw std::runtime_error("Failed to initialize camera with deviceId " +
-                                 std::to_string(device_id));
-    }
-}
-
-Camera::~Camera() {
-    if (frame_capture_.isOpened()) {
-        frame_capture_.release();
-    }
-}
-
-bool Camera::Initialize() {
-    frame_capture_.open(device_id_);
-
+WebcamCamera::WebcamCamera(int deviceID, int apiID) : deviceID{deviceID}, apiID{apiID} {
+    
+    frame_capture_.open(deviceID, apiID);
     if (!frame_capture_.isOpened()) {
-        std::cerr << "Error: Could not open camera with deviceID: " << device_id_ << '\n';
-        return false;
+        throw std::runtime_error("Error: Could not open camera with deviceID: " + std::to_string(deviceID));
     }
-
     std::cout << "Camera initialized successfully!\n";
-
-    frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, kDefaultWidth);
-    frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, kDefaultHeight);
+    frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, Defaults::FrameDefaultWidth);    
+    frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, Defaults::FrameDefaultHeight);
 
     std::cout << "Frame Width: " << frame_capture_.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
     std::cout << "Frame Height: " << frame_capture_.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
-
-    cv::Mat temp_frame;
-    int64_t start = cv::getTickCount();
-    for (int i = 0; i < kFpsSampleCount; ++i) {
-        frame_capture_ >> temp_frame;
-    }
-    int64_t end = cv::getTickCount();
-    double time_elapsed = (end - start) / cv::getTickFrequency();
-
-    if (time_elapsed > 0.0) {
-        current_fps_ = kFpsSampleCount / time_elapsed;
-        std::cout << "FPS: " << current_fps_ << '\n';
-    } else {
-        current_fps_ = 30.0;
-    }
-
-    last_frame_tick_ = cv::getTickCount();
-    return true;
 }
 
-void Camera::Visualize(const std::string& window_name) {
-    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
-    std::cout << "Starting webcam feed. Press 'q' or 'ESC' to quit.\n";
-
+auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> { // std::optional for matching signature of base class
     cv::Mat frame;
-    while (true) {
-        frame = GetFrame();
-
-        if (frame.empty()) {
-            std::cerr << "Error: Could not grab frame.\n";
-            break;
-        }
-
-        AnnotateFrame(&frame);
-        cv::imshow(window_name, frame);
-
-        int key = cv::waitKey(1);
-        if (key == 'q' || key == 'Q' || key == 27) {
-            std::cout << "Exiting...\n";
-            break;
-        }
-
-        if (key == 's' || key == 'S') {
-            std::string filename =
-                "captured_frame_" + std::to_string(cv::getTickCount()) + ".jpg";
-            cv::imwrite(filename, frame);
-            std::cout << "Frame saved as: " << filename << '\n';
-        }
+    bool read_img_ok = frame_capture_.read(frame);
+    if (!read_img_ok) {
+        throw std::runtime_error("frame_capture_.read() failed, device maybe disconnected");
     }
+    if (frame.empty()) {
+        throw std::runtime_error("frame_capture_.read() succeeded but returned an empty frame. The camera may not be delivering images.");
+    }
+    
+    updateFps();
 
-    cv::destroyWindow(window_name);
+    return frame;
 }
 
-bool Camera::IsOpened() const { return frame_capture_.isOpened(); }
+VideoFile::VideoFile(const std::string& source_file, int apiID) : source_file{source_file}, apiID{apiID} {
+    
+    frame_capture_.open(source_file, apiID);
+    if (!frame_capture_.isOpened()) {
+        throw std::runtime_error("ERROR: Unable to open source file '" + source_file + "'. Please check the file path and format.");
+    }
+    frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, Defaults::FrameDefaultWidth);
+    frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, Defaults::FrameDefaultHeight);
 
-bool Camera::SetFrameWidth(int width) {
-    return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, width);
+    std::cout << "Frame Width: " << frame_capture_.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
+    std::cout << "Frame Height: " << frame_capture_.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 }
 
-bool Camera::SetFrameHeight(int height) {
-    return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, height);
-}
-
-double Camera::GetFps() const { return current_fps_; }
-
-void Camera::AnnotateFrame(cv::Mat* frame) {
-    std::ostringstream oss;
-    oss << "FPS: " << std::fixed << std::setprecision(1) << current_fps_;
-    cv::putText(*frame, oss.str(), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7,
-                cv::Scalar(0, 255, 0), 2);
-}
-
-cv::Mat Camera::GetFrame() {
+auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
     cv::Mat frame;
-    frame_capture_ >> frame;
+    bool read_file_ok = frame_capture_.read(frame);
 
-    int64_t current_tick = cv::getTickCount();
-    double time_delta = (current_tick - last_frame_tick_) / cv::getTickFrequency();
-
-    if (time_delta > 0.0) {
-        double instant_fps = 1.0 / time_delta;
-        current_fps_ = kAlphaFps * instant_fps + (1.0 - kAlphaFps) * current_fps_;
+    if(!read_file_ok){
+        return std::nullopt;
+    }
+    if(frame.empty()){
+        throw std::runtime_error("Frame read was successful but the frame is empty. The video file may be corrupted or at EOF.");
     }
 
-    last_frame_tick_ = current_tick;
+    updateFps();
+
     return frame;
 }
