@@ -6,8 +6,8 @@
 #include "detector.hpp"
 #include "utils.hpp"
 
-constexpr int kDefaultDeviceId = 0;
-const std::string kEnginePath = "models/yolov10l_fp16.engine";
+constexpr int kDefaultDeviceId = 4;
+const std::string kEnginePath = "models/engine/yolov10n_fp16.engine";
 constexpr float kConfThreshold = 0.1f;
 constexpr int kModelInputSize = 640;
 
