@@ -12,6 +12,8 @@ pkg-config
 curl
 ca-certificates
 openssh-client
+clang-format
+clang-tidy
 
 # Camera
 libv4l-dev

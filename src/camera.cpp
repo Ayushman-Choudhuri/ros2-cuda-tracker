@@ -8,7 +8,8 @@
 
 static constexpr int kDefaultWidth = 640;
 static constexpr int kDefaultHeight = 480;
-static constexpr int kFpsSampleCount = 4;
+static constexpr int kInitWarmupFrameCount = 4;
+static constexpr double kDefaultFps = 30.0;
 
 Camera::Camera(int device_id) : device_id_(device_id) {
     if (!Initialize()) {
@@ -18,87 +19,54 @@ Camera::Camera(int device_id) : device_id_(device_id) {
 }
 
 Camera::~Camera() {
-    if (frame_capture_.isOpened()) {
-        frame_capture_.release();
+    if (camera_handle_.isOpened()) {
+        camera_handle_.release();
     }
 }
 
 bool Camera::Initialize() {
-    frame_capture_.open(device_id_);
+    camera_handle_.open(device_id_);
 
-    if (!frame_capture_.isOpened()) {
+    if (!camera_handle_.isOpened()) {
         std::cerr << "Error: Could not open camera with deviceID: " << device_id_ << '\n';
         return false;
     }
 
     std::cout << "Camera initialized successfully!\n";
 
-    frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, kDefaultWidth);
-    frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, kDefaultHeight);
+    camera_handle_.set(cv::CAP_PROP_FRAME_WIDTH, kDefaultWidth);
+    camera_handle_.set(cv::CAP_PROP_FRAME_HEIGHT, kDefaultHeight);
 
-    std::cout << "Frame Width: " << frame_capture_.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
-    std::cout << "Frame Height: " << frame_capture_.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
+    std::cout << "Frame Width: " << camera_handle_.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
+    std::cout << "Frame Height: " << camera_handle_.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 
     cv::Mat temp_frame;
     int64_t start = cv::getTickCount();
-    for (int i = 0; i < kFpsSampleCount; ++i) {
-        frame_capture_ >> temp_frame;
+    for (int sample_idx = 0; sample_idx < kInitWarmupFrameCount; ++sample_idx) {
+        camera_handle_ >> temp_frame;
     }
     int64_t end = cv::getTickCount();
     double time_elapsed = (end - start) / cv::getTickFrequency();
 
     if (time_elapsed > 0.0) {
-        current_fps_ = kFpsSampleCount / time_elapsed;
+        current_fps_ = kInitWarmupFrameCount / time_elapsed;
         std::cout << "FPS: " << current_fps_ << '\n';
     } else {
-        current_fps_ = 30.0;
+        current_fps_ = kDefaultFps;
     }
 
     last_frame_tick_ = cv::getTickCount();
     return true;
 }
 
-void Camera::Visualize(const std::string& window_name) {
-    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
-    std::cout << "Starting webcam feed. Press 'q' or 'ESC' to quit.\n";
-
-    cv::Mat frame;
-    while (true) {
-        frame = GetFrame();
-
-        if (frame.empty()) {
-            std::cerr << "Error: Could not grab frame.\n";
-            break;
-        }
-
-        AnnotateFrame(&frame);
-        cv::imshow(window_name, frame);
-
-        int key = cv::waitKey(1);
-        if (key == 'q' || key == 'Q' || key == 27) {
-            std::cout << "Exiting...\n";
-            break;
-        }
-
-        if (key == 's' || key == 'S') {
-            std::string filename =
-                "captured_frame_" + std::to_string(cv::getTickCount()) + ".jpg";
-            cv::imwrite(filename, frame);
-            std::cout << "Frame saved as: " << filename << '\n';
-        }
-    }
-
-    cv::destroyWindow(window_name);
-}
-
-bool Camera::IsOpened() const { return frame_capture_.isOpened(); }
+bool Camera::IsOpened() const { return camera_handle_.isOpened(); }
 
 bool Camera::SetFrameWidth(int width) {
-    return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, width);
+    return camera_handle_.isOpened() && camera_handle_.set(cv::CAP_PROP_FRAME_WIDTH, width);
 }
 
 bool Camera::SetFrameHeight(int height) {
-    return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, height);
+    return camera_handle_.isOpened() && camera_handle_.set(cv::CAP_PROP_FRAME_HEIGHT, height);
 }
 
 double Camera::GetFps() const { return current_fps_; }
@@ -110,18 +78,22 @@ void Camera::AnnotateFrame(cv::Mat* frame) {
                 cv::Scalar(0, 255, 0), 2);
 }
 
-cv::Mat Camera::GetFrame() {
-    cv::Mat frame;
-    frame_capture_ >> frame;
-
+double Camera::CalculateFPS() {
     int64_t current_tick = cv::getTickCount();
     double time_delta = (current_tick - last_frame_tick_) / cv::getTickFrequency();
 
     if (time_delta > 0.0) {
         double instant_fps = 1.0 / time_delta;
-        current_fps_ = kAlphaFps * instant_fps + (1.0 - kAlphaFps) * current_fps_;
+        current_fps_ = kAlphaFps * instant_fps + (1 - kAlphaFps) * current_fps_;
     }
 
     last_frame_tick_ = current_tick;
+    return current_fps_;
+}
+
+cv::Mat Camera::GetFrame() {
+    cv::Mat frame;
+    camera_handle_ >> frame;
+    CalculateFPS();
     return frame;
 }

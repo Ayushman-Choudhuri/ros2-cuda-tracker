@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "compileCommands": "${workspaceFolder}/compile_commands.json",
+            "includePath": [
+                "${workspaceFolder}/include",
+                "/usr/include/opencv4",
+                "/usr/local/cuda/targets/x86_64-linux/include",
+                "/usr/include/x86_64-linux-gnu"
+            ],
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}
