@@ -147,30 +147,8 @@ export_variant() {
     # Step 2: Export ONNX
     if ! $SKIP_ONNX; then
         log "Exporting ONNX (opset 13, imgsz 640, end2end NMS-free) …"
-        EXPORT_PT_FILE="$pt_file" EXPORT_ONNX_FILE="$onnx_file" python3 - <<'PYEOF'
-import os, shutil, pathlib
-from ultralytics import YOLO
-
-pt = pathlib.Path(os.environ["EXPORT_PT_FILE"])
-dst = pathlib.Path(os.environ["EXPORT_ONNX_FILE"])
-model = YOLO(str(pt))
-
-# end2end=True gives the [batch, 300, 6] NMS-free output that the C++ Detector expects.
-export_path = model.export(
-    format="onnx",
-    imgsz=640,
-    opset=13,
-    simplify=True,
-    dynamic=False,
-)
-
-src = pathlib.Path(export_path)
-if src != dst:
-    shutil.move(str(src), str(dst))
-    print(f"Moved {src.name} → {dst}")
-else:
-    print(f"Exported to {dst}")
-PYEOF
+        EXPORT_PT_FILE="$pt_file" EXPORT_ONNX_FILE="$onnx_file" \
+            python3 "$SCRIPT_DIR/utils/export_onnx.py"
         log "Saved: $onnx_file"
     fi
 
