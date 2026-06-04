@@ -1,6 +1,4 @@
 build
 graphify-out/
 
-models/*.pt
-models/*.engine
-models/calibration.cache
+models/
