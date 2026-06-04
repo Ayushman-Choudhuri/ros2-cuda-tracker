@@ -16,7 +16,7 @@
             "settings": {
                 "cmake.buildDirectory": "${workspaceFolder}/build",
                 "cmake.generator": "Ninja",
-                "C_Cpp.default.cppStandard": "c++23",
+                "C_Cpp.default.cppStandard": "c++17",
                 "C_Cpp.default.compilerPath": "/usr/bin/g++",
                 "C_Cpp.intelliSenseEngine": "disabled",
                 "editor.formatOnSave": false,

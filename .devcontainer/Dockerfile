@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM nvcr.io/nvidia/tensorrt:23.03-py3
 
 ARG DEBIAN_FRONTEND=noninteractive
 

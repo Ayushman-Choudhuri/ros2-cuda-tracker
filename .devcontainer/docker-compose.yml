@@ -17,6 +17,15 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
       - SSH_AUTH_SOCK=/ssh-agent
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     network_mode: host
     privileged: true
     stdin_open: true
