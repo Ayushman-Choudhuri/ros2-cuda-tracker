@@ -9,10 +9,10 @@
 #include <opencv2/videoio.hpp>
 
 
-WebcamCamera::WebcamCamera(int deviceID, int apiID) : deviceID{deviceID}, apiID{apiID} {
-    frame_capture_.open(deviceID, apiID);
+WebcamCamera::WebcamCamera(int deviceID_, int apiID_) : deviceID_{deviceID_}, apiID_{apiID_} {
+    frame_capture_.open(deviceID_, apiID_);
     if (!frame_capture_.isOpened()) {
-        throw std::runtime_error("Error: Could not open camera with deviceID: " + std::to_string(deviceID));
+        throw std::runtime_error("Error: Could not open camera with deviceID: " + std::to_string(deviceID_));
     }
     std::cout << "Camera initialized successfully!\n";
     frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, Defaults::FrameDefaultWidth);
@@ -36,8 +36,8 @@ auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> {
     return frame;
 }
 
-VideoFile::VideoFile(const std::string& source_file, int apiID) : source_file{source_file}, apiID{apiID} {
-    frame_capture_.open(source_file, apiID);
+VideoFile::VideoFile(const std::string& source_file, int apiID_) : source_file{source_file}, apiID_{apiID_} {
+    frame_capture_.open(source_file, apiID_);
     if (!frame_capture_.isOpened()) {
         throw std::runtime_error("ERROR: Unable to open source file '" + source_file + "'. Please check the file path and format.");
     }

@@ -50,7 +50,7 @@ class VideoCaptureBase : public IInputSource {
 
 class WebcamCamera : public VideoCaptureBase {
     public:
-        WebcamCamera(int deviceID = 0, int apiID = cv::CAP_ANY);
+        WebcamCamera(int deviceID_ = 0, int apiID_ = cv::CAP_ANY);
         WebcamCamera(const WebcamCamera&) = delete;
         WebcamCamera& operator=(const WebcamCamera&) = delete;
         WebcamCamera(WebcamCamera&&) = default;
@@ -59,13 +59,13 @@ class WebcamCamera : public VideoCaptureBase {
         std::optional<cv::Mat> getNextFrame() override;
 
     private:
-        int deviceID;
-        int apiID;
+        int deviceID_;
+        int apiID_;
 };
 
 class VideoFile : public VideoCaptureBase {
     public:
-        VideoFile(const std::string& source_file, int apiID = cv::CAP_ANY);
+        VideoFile(const std::string& source_file, int apiID_ = cv::CAP_ANY);
         VideoFile(const VideoFile&) = delete;
         VideoFile& operator=(const VideoFile&) = delete;
         VideoFile(VideoFile&&) = default;
@@ -75,5 +75,5 @@ class VideoFile : public VideoCaptureBase {
 
     private:
         std::string source_file;
-        int apiID;
+        int apiID_;
 };
