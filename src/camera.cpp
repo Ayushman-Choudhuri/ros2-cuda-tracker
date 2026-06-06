@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
