@@ -27,9 +27,9 @@ int main(int argc, char* argv[]) {
         } else if (argc == 2) {
             source = std::make_unique<VideoFile>(argv[1]);
         } else {
-            std::cout << "Wrong number of arguments passed!\n";
-            std::cout << "Use <program name> <source_video_file> OR simply <program name> for webcam...\n";
-            return -1;
+            std::cerr << "Wrong number of arguments passed!\n";
+            std::cerr << "Use <program name> <source_video_file> OR simply <program name> for webcam...\n";
+            return 1;
         }
 
         Detector detector(kEnginePath, kConfThreshold, kModelInputSize, kModelInputSize);
