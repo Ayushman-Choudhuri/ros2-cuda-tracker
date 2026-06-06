@@ -3,7 +3,7 @@
 ## 1.0 Goal
 
 Real-time object detection and tracking pipeline targeting NVIDIA Jetson hardware.
-Combines YOLOv10n (TensorRT FP16) with DeepSORT tracking over ROS2 LifecycleNodes, evolving into a zero-copy GStreamer DeepStream pipeline.
+Combines YOLOv10n (TensorRT FP16) with SORT tracking over ROS2 LifecycleNodes, evolving into a zero-copy GStreamer DeepStream pipeline.
 
 ## 2.0 Setup
 
