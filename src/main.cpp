@@ -60,8 +60,9 @@ int main(int argc, char* argv[]) {
             }
         }
     } catch (const std::exception& error) {
-        std::cout << "Runtime error: " << error.what() << '\n';
-        return -1;
+        cv::destroyAllWindows();
+        std::cerr << "Runtime error: " << error.what() << '\n';
+        return 1;
     }
 
     cv::destroyAllWindows();
