@@ -1,16 +1,16 @@
+#pragma once
+
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 #include <optional>
-#include <iostream>
-#include <stdio.h>
+#include <string>
 
 namespace Defaults {
     inline constexpr int FrameDefaultWidth  = 1280;
     inline constexpr int FrameDefaultHeight = 720;
 }
 
-// Pure interface
 class IInputSource {
     public:
         virtual ~IInputSource() = default;
@@ -18,10 +18,16 @@ class IInputSource {
         virtual double getFps() const = 0;
 };
 
-// Abstract base class
 class VideoCaptureBase : public IInputSource {
     public:
         double getFps() const override { return current_fps_; }
+        bool isOpened() const { return frame_capture_.isOpened(); }
+        bool setFrameWidth(int width) {
+            return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, width);
+        }
+        bool setFrameHeight(int height) {
+            return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, height);
+        }
 
     protected:
         cv::VideoCapture frame_capture_;
@@ -30,26 +36,28 @@ class VideoCaptureBase : public IInputSource {
             int64_t current_tick = cv::getTickCount();
             double time_delta = static_cast<double>(current_tick - last_frame_tick_) / cv::getTickFrequency();
             if (time_delta > 0.0) {
-                current_fps_ = 1.0 / time_delta;
+                double instant_fps = 1.0 / time_delta;
+                current_fps_ = kAlphaFps * instant_fps + (1.0 - kAlphaFps) * current_fps_;
             }
             last_frame_tick_ = current_tick;
         }
 
-private:
-    double current_fps_{0.0};
-    int64_t last_frame_tick_{cv::getTickCount()};
+    private:
+        static constexpr double kAlphaFps = 0.1;
+        double current_fps_{0.0};
+        int64_t last_frame_tick_{cv::getTickCount()};
 };
 
 class WebcamCamera : public VideoCaptureBase {
     public:
         WebcamCamera(int deviceID = 0, int apiID = cv::CAP_ANY);
-        WebcamCamera(const WebcamCamera&) = delete;  // copy constructor
-        WebcamCamera& operator=(const WebcamCamera&) = delete;  // copy assignment constructor
-        WebcamCamera(WebcamCamera&&) = default;  // move constructor
-        ~WebcamCamera() override = default;      // destructor
+        WebcamCamera(const WebcamCamera&) = delete;
+        WebcamCamera& operator=(const WebcamCamera&) = delete;
+        WebcamCamera(WebcamCamera&&) = default;
+        ~WebcamCamera() override = default;
 
         std::optional<cv::Mat> getNextFrame() override;
-        
+
     private:
         int deviceID;
         int apiID;
@@ -64,7 +72,7 @@ class VideoFile : public VideoCaptureBase {
         ~VideoFile() override = default;
 
         std::optional<cv::Mat> getNextFrame() override;
-        
+
     private:
         std::string source_file;
         int apiID;

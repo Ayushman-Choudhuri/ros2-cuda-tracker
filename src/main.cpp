@@ -5,13 +5,19 @@
 #include <opencv2/imgproc.hpp>
 
 #include "camera.hpp"
+#include "detector.hpp"
+#include "utils.hpp"
 
-constexpr int kDefaultDeviceId = 0;
+constexpr int kDefaultDeviceId = 4;
+const std::string kEnginePath = "models/engine/yolov10n_fp16.engine";
+constexpr float kConfThreshold = 0.1f;
+constexpr int kModelInputSize = 640;
 
 int main(int argc, char* argv[]) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
 
-    std::cout << "Using camera device ID: " << kDefaultDeviceId << '\n';
+    std::cout << "Camera device : " << kDefaultDeviceId << '\n';
+    std::cout << "Engine        : " << kEnginePath << '\n';
 
     std::unique_ptr<IInputSource> source;
 
@@ -26,8 +32,15 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        cv::namedWindow("Camera feed", cv::WINDOW_NORMAL);
-        std::cout << "Starting camera feed. Press 'q' or 'ESC' to quit.\n";
+        Detector detector(kEnginePath, kConfThreshold, kModelInputSize, kModelInputSize);
+
+        if (!detector.IsInitialized()) {
+            std::cerr << "Detector failed to initialize.\n";
+            return 1;
+        }
+
+        cv::namedWindow("YOLOv10 Detection", cv::WINDOW_NORMAL);
+        std::cout << "Running. Press 'q' or ESC to quit.\n";
 
         while (true) {
             auto frame = source->getNextFrame();
@@ -35,10 +48,11 @@ int main(int argc, char* argv[]) {
                 break;
             }
 
-            cv::putText(*frame, "FPS: " + std::to_string(static_cast<int>(source->getFps())),
-                        cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
+            std::vector<Detection> detections = detector.Infer(*frame);
+            DrawDetections(*frame, detections);
+            DrawFps(*frame, source->getFps());
 
-            cv::imshow("Camera feed", *frame);
+            cv::imshow("YOLOv10 Detection", *frame);
 
             const int key = cv::waitKey(1);
             if (key == 'q' || key == 'Q' || key == 27) {
@@ -50,5 +64,6 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    cv::destroyAllWindows();
     return 0;
 }
