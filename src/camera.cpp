@@ -22,7 +22,7 @@ WebcamCamera::WebcamCamera(int deviceID_, int apiID_) : deviceID_{deviceID_}, ap
     std::cout << "Frame Height: " << frame_capture_.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 }
 
-auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> {
+auto WebcamCamera::GetNextFrame() -> std::optional<cv::Mat> {
     cv::Mat frame;
     bool read_img_ok = frame_capture_.read(frame);
     if (!read_img_ok) {
@@ -32,7 +32,7 @@ auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> {
         throw std::runtime_error("frame_capture_.read() succeeded but returned an empty frame. The camera may not be delivering images.");
     }
 
-    updateFps();
+    UpdateFps();
     return frame;
 }
 
@@ -48,7 +48,7 @@ VideoFile::VideoFile(const std::string& source_file, int apiID_) : source_file{s
     std::cout << "Frame Height: " << frame_capture_.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 }
 
-auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
+auto VideoFile::GetNextFrame() -> std::optional<cv::Mat> {
     cv::Mat frame;
     bool read_file_ok = frame_capture_.read(frame);
 
@@ -59,6 +59,6 @@ auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
         throw std::runtime_error("Frame read was successful but the frame is empty. The video file may be corrupted or at EOF.");
     }
 
-    updateFps();
+    UpdateFps();
     return frame;
 }

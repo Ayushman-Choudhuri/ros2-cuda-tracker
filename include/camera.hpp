@@ -14,25 +14,25 @@ namespace Defaults {
 class IInputSource {
     public:
         virtual ~IInputSource() = default;
-        virtual std::optional<cv::Mat> getNextFrame() = 0;
-        virtual double getFps() const = 0;
+        virtual std::optional<cv::Mat> GetNextFrame() = 0;
+        virtual double GetFps() const = 0;
 };
 
 class VideoCaptureBase : public IInputSource {
     public:
-        double getFps() const override { return current_fps_; }
-        bool isOpened() const { return frame_capture_.isOpened(); }
-        bool setFrameWidth(int width) {
+        double GetFps() const override { return current_fps_; }
+        bool IsOpened() const { return frame_capture_.isOpened(); }
+        bool SetFrameWidth(int width) {
             return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_WIDTH, width);
         }
-        bool setFrameHeight(int height) {
+        bool SetFrameHeight(int height) {
             return frame_capture_.isOpened() && frame_capture_.set(cv::CAP_PROP_FRAME_HEIGHT, height);
         }
 
     protected:
         cv::VideoCapture frame_capture_;
 
-        void updateFps() {
+        void UpdateFps() {
             int64_t current_tick = cv::getTickCount();
             double time_delta = static_cast<double>(current_tick - last_frame_tick_) / cv::getTickFrequency();
             if (time_delta > 0.0) {
@@ -56,7 +56,7 @@ class WebcamCamera : public VideoCaptureBase {
         WebcamCamera(WebcamCamera&&) = default;
         ~WebcamCamera() override = default;
 
-        std::optional<cv::Mat> getNextFrame() override;
+        std::optional<cv::Mat> GetNextFrame() override;
 
     private:
         int deviceID_;
@@ -71,7 +71,7 @@ class VideoFile : public VideoCaptureBase {
         VideoFile(VideoFile&&) = default;
         ~VideoFile() override = default;
 
-        std::optional<cv::Mat> getNextFrame() override;
+        std::optional<cv::Mat> GetNextFrame() override;
 
     private:
         std::string source_file;

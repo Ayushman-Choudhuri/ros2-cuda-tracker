@@ -43,14 +43,14 @@ int main(int argc, char* argv[]) {
         std::cout << "Running. Press 'q' or ESC to quit.\n";
 
         while (true) {
-            auto frame = source->getNextFrame();
+            auto frame = source->GetNextFrame();
             if (!frame) {
                 break;
             }
 
             std::vector<Detection> detections = detector.Infer(*frame);
             DrawDetections(*frame, detections);
-            DrawFps(*frame, source->getFps());
+            DrawFps(*frame, source->GetFps());
 
             cv::imshow("YOLOv10 Detection", *frame);
 
