@@ -15,7 +15,7 @@ class TrtLogger : public nvinfer1::ILogger {
     }
 };
 
-static TrtLogger gLogger;
+TrtLogger gLogger;
 
 size_t BytesPerElement(nvinfer1::DataType dtype) {
     switch (dtype) {
@@ -32,7 +32,7 @@ size_t BytesPerElement(nvinfer1::DataType dtype) {
     }
 }
 
-}
+}  // namespace
 
 Engine::Engine(const std::string& engine_path) {
     Load(engine_path);
@@ -44,8 +44,9 @@ Engine::~Engine() {
     for (auto& tensor_binding : tensors_) {
         cudaFree(tensor_binding.gpu_ptr);
     }
-    if (stream_)
+    if (stream_) {
         cudaStreamDestroy(stream_);
+    }
     delete context_;
     delete engine_;
     delete runtime_;
@@ -75,7 +76,6 @@ nvinfer1::DataType Engine::GetOutputDataType() const {
 }
 
 void Engine::Load(const std::string& engine_path) {
-    // Read the .engine file (a TRT-serialized binary) into a byte buffer.
     std::ifstream file(engine_path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         throw std::runtime_error("Cannot open engine file: " + engine_path);
@@ -87,19 +87,21 @@ void Engine::Load(const std::string& engine_path) {
         throw std::runtime_error("Cannot read engine file: " + engine_path);
     }
 
-    // Build the TRT three-object chain from those raw bytes.
     runtime_ = nvinfer1::createInferRuntime(gLogger);
-    if (!runtime_)
+    if (!runtime_) {
         throw std::runtime_error("Failed to create TRT runtime");
+    }
 
-    // "Deserialize" = reconstruct the compiled model from the binary blob.
+    // deserializeCudaEngine reconstructs the compiled model from the binary blob.
     engine_ = runtime_->deserializeCudaEngine(data.data(), data.size());
-    if (!engine_)
+    if (!engine_) {
         throw std::runtime_error("Failed to deserialize engine");
+    }
 
     context_ = engine_->createExecutionContext();
-    if (!context_)
+    if (!context_) {
         throw std::runtime_error("Failed to create execution context");
+    }
 }
 
 void Engine::AllocateBuffers() {
@@ -111,7 +113,6 @@ void Engine::AllocateBuffers() {
         nvinfer1::Dims dims = engine_->getTensorShape(name);
         nvinfer1::DataType dtype = engine_->getTensorDataType(name);
 
-        // Multiply all dimension sizes to get total element count.
         size_t num_elements = 1;
         for (int dim_idx = 0; dim_idx < dims.nbDims; ++dim_idx) {
             num_elements *= static_cast<size_t>(dims.d[dim_idx]);
@@ -121,8 +122,9 @@ void Engine::AllocateBuffers() {
         cudaMalloc(&tensors_[tensor_idx].gpu_ptr, num_elements * BytesPerElement(dtype));
 
         if (engine_->getTensorIOMode(name) == nvinfer1::TensorIOMode::kINPUT) {
-            if (!input_buffer_)
+            if (!input_buffer_) {
                 input_buffer_ = tensors_[tensor_idx].gpu_ptr;
+            }
         } else {
             // First output: YOLOv10 NMS-free head, shape [1, num_det, num_fields]
             if (!output_buffer_) {
@@ -145,7 +147,6 @@ void Engine::AllocateBuffers() {
 }
 
 void Engine::Infer() {
-    // Tell TRT where each tensor's GPU memory lives, then launch async.
     for (auto& tensor_binding : tensors_) {
         context_->setTensorAddress(tensor_binding.name.c_str(), tensor_binding.gpu_ptr);
     }

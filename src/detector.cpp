@@ -3,10 +3,11 @@
 #include <cuda_fp16.h>
 
 #include <algorithm>
-#include <opencv2/dnn.hpp>
-#include <opencv2/imgproc.hpp>
 #include <stdexcept>
 #include <vector>
+
+#include <opencv2/dnn.hpp>
+#include <opencv2/imgproc.hpp>
 
 Detector::Detector(const std::string& engine_path, float conf_threshold, int input_width,
                    int input_height, int target_class_id)
@@ -47,21 +48,22 @@ void Detector::PreProcessImage(const cv::Mat& image, float& scale, int& pad_x, i
 
 std::vector<Detection> Detector::PostProcessDetections(const float* output, int num_detections,
                                                        int num_fields, float scale, int pad_x,
-                                                       int pad_y) {
+                                                       int pad_y) const {
     std::vector<Detection> detections;
     detections.reserve(num_detections);
 
     for (int det_idx = 0; det_idx < num_detections; ++det_idx) {
         const float* det_fields = output + det_idx * num_fields;
         float confidence = det_fields[4];
-        if (confidence < conf_threshold_)
+        if (confidence < conf_threshold_) {
             continue;
+        }
 
         int class_id = static_cast<int>(det_fields[5]);
-        if (target_class_id_ >= 0 && class_id != target_class_id_)
+        if (target_class_id_ >= 0 && class_id != target_class_id_) {
             continue;
+        }
 
-        // Undo letterbox: subtract padding then invert uniform scale.
         int bbox_left   = static_cast<int>(std::max(0.0F, (det_fields[0] - pad_x) / scale));
         int bbox_top    = static_cast<int>(std::max(0.0F, (det_fields[1] - pad_y) / scale));
         int bbox_right  = static_cast<int>(std::max(0.0F, (det_fields[2] - pad_x) / scale));
@@ -76,32 +78,35 @@ std::vector<Detection> Detector::PostProcessDetections(const float* output, int 
 }
 
 std::vector<Detection> Detector::Infer(const cv::Mat& image) {
-    if (!IsInitialized())
+    if (!IsInitialized()) {
         throw std::runtime_error("Detector not initialized");
+    }
 
     float scale;
-    int pad_x, pad_y;
+    int pad_x;
+    int pad_y;
     PreProcessImage(image, scale, pad_x, pad_y);
 
     engine_->Infer();
 
-    int num_det = engine_->GetOutputNumDetections();
+    int num_detections = engine_->GetOutputNumDetections();
     int num_fields = engine_->GetOutputNumFields();
-    std::vector<float> output(static_cast<size_t>(num_det) * num_fields);
+    std::vector<float> output(static_cast<size_t>(num_detections) * num_fields);
 
     if (engine_->GetOutputDataType() == nvinfer1::DataType::kHALF) {
-        std::vector<__half> half_buf(output.size());
-        cudaMemcpyAsync(half_buf.data(), engine_->GetOutputBuffer(),
-                        half_buf.size() * sizeof(__half), cudaMemcpyDeviceToHost,
+        std::vector<__half> half_buffer(output.size());
+        cudaMemcpyAsync(half_buffer.data(), engine_->GetOutputBuffer(),
+                        half_buffer.size() * sizeof(__half), cudaMemcpyDeviceToHost,
                         engine_->GetStream());
         cudaStreamSynchronize(engine_->GetStream());
-        for (size_t field_idx = 0; field_idx < output.size(); ++field_idx)
-            output[field_idx] = __half2float(half_buf[field_idx]);
+        for (size_t field_idx = 0; field_idx < output.size(); ++field_idx) {
+            output[field_idx] = __half2float(half_buffer[field_idx]);
+        }
     } else {
         cudaMemcpyAsync(output.data(), engine_->GetOutputBuffer(), output.size() * sizeof(float),
                         cudaMemcpyDeviceToHost, engine_->GetStream());
         cudaStreamSynchronize(engine_->GetStream());
     }
 
-    return PostProcessDetections(output.data(), num_det, num_fields, scale, pad_x, pad_y);
+    return PostProcessDetections(output.data(), num_detections, num_fields, scale, pad_x, pad_y);
 }

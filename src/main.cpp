@@ -9,7 +9,7 @@
 
 constexpr int kDefaultDeviceId = 4;
 const std::string kEnginePath = "models/engine/yolov10x_fp16.engine";
-constexpr float kConfThreshold = 0.1f;
+constexpr float kConfThreshold = 0.1F;
 constexpr int kModelInputSize = 640;
 constexpr int kPersonClassId = 0;  // COCO class 0
 
@@ -45,10 +45,11 @@ int main() {
         DrawTrackedDetections(frame, tracks);
         DrawFps(frame, webcam.GetFps());
 
-        cv::imshow("YPerson Tracking", frame);
+        cv::imshow("Person Tracking", frame);
         int key = cv::waitKey(1);
-        if (key == 'q' || key == 'Q' || key == 27)
+        if (key == 'q' || key == 'Q' || key == 27) {
             break;
+        }
     }
 
     cv::destroyAllWindows();
