@@ -25,6 +25,10 @@ RUN groupadd --gid ${USER_GID} ${USERNAME} 2>/dev/null || true \
     && chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.ssh \
     && chsh -s $(which bash) ${USERNAME}
 
+COPY requirements.txt /tmp/requirements.txt
+RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
+
 USER ${USERNAME}
 
 WORKDIR /workspace
