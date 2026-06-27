@@ -9,11 +9,12 @@
 #include <vector>
 
 Detector::Detector(const std::string& engine_path, float conf_threshold, int input_width,
-                   int input_height)
+                   int input_height, int target_class_id)
     : engine_(std::make_unique<Engine>(engine_path)),
       input_width_(input_width),
       input_height_(input_height),
-      conf_threshold_(conf_threshold) {
+      conf_threshold_(conf_threshold),
+      target_class_id_(target_class_id) {
 }
 
 bool Detector::IsInitialized() const {
@@ -56,6 +57,10 @@ std::vector<Detection> Detector::PostProcessDetections(const float* output, int 
         if (confidence < conf_threshold_)
             continue;
 
+        int class_id = static_cast<int>(det_fields[5]);
+        if (target_class_id_ >= 0 && class_id != target_class_id_)
+            continue;
+
         // Undo letterbox: subtract padding then invert uniform scale.
         int bbox_left   = static_cast<int>(std::max(0.0F, (det_fields[0] - pad_x) / scale));
         int bbox_top    = static_cast<int>(std::max(0.0F, (det_fields[1] - pad_y) / scale));
@@ -64,7 +69,7 @@ std::vector<Detection> Detector::PostProcessDetections(const float* output, int 
 
         detections.push_back({cv::Rect(bbox_left, bbox_top, bbox_right - bbox_left,
                                        bbox_bottom - bbox_top),
-                               confidence, static_cast<int>(det_fields[5])});
+                               confidence, class_id});
     }
 
     return detections;

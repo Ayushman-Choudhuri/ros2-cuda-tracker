@@ -95,3 +95,47 @@ void DrawFps(cv::Mat& frame, double fps) {
     cv::putText(frame, oss.str(), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7,
                 cv::Scalar(0, 255, 0), 2, cv::LINE_AA);
 }
+
+void DrawTrackedDetections(cv::Mat& frame, const std::vector<TrackedDetection>& tracks,
+                           const std::vector<std::string>& class_names) {
+    const auto& names = class_names.empty() ? kCocoNames : class_names;
+
+    for (const auto& track : tracks) {
+        cv::Rect bbox = track.bbox & cv::Rect(0, 0, frame.cols, frame.rows);
+        if (bbox.area() <= 0) {
+            continue;
+        }
+
+        const cv::Scalar box_color =
+            (track.class_id >= 0) ? ClassColor(track.class_id) : ClassColor(track.track_id);
+        cv::rectangle(frame, bbox, box_color, 2);
+
+        std::string track_label;
+        if (track.class_id >= 0) {
+            std::string class_name =
+                (track.class_id < static_cast<int>(names.size()))
+                    ? names[track.class_id]
+                    : "cls" + std::to_string(track.class_id);
+            std::ostringstream oss;
+            oss << class_name << " #" << track.track_id << ' '
+                << std::fixed << std::setprecision(2) << track.confidence;
+            track_label = oss.str();
+        } else {
+            track_label = "#" + std::to_string(track.track_id);
+        }
+
+        constexpr int kFont = cv::FONT_HERSHEY_SIMPLEX;
+        constexpr double kScale = 0.5;
+        constexpr int kThick = 1;
+        int baseline = 0;
+        cv::Size text_sz = cv::getTextSize(track_label, kFont, kScale, kThick, &baseline);
+
+        int text_y = std::max(bbox.y - 4, text_sz.height + 2);
+        cv::Point label_top_left(bbox.x, text_y - text_sz.height - 2);
+        cv::Point label_bottom_right(bbox.x + text_sz.width, text_y + baseline);
+
+        cv::rectangle(frame, label_top_left, label_bottom_right, box_color, cv::FILLED);
+        cv::putText(frame, track_label, cv::Point(bbox.x, text_y), kFont, kScale,
+                    cv::Scalar(255, 255, 255), kThick, cv::LINE_AA);
+    }
+}

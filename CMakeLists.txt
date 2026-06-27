@@ -24,12 +24,34 @@ message(STATUS "TensorRT include : ${TENSORRT_INCLUDE_DIR}")
 message(STATUS "TensorRT library : ${TENSORRT_LIBRARY}")
 message(STATUS "OpenCV version   : ${OpenCV_VERSION}")
 
+include(FetchContent)
+FetchContent_Declare(
+    sort_cpp
+    GIT_REPOSITORY https://github.com/yasenh/sort-cpp.git
+    GIT_TAG        master
+)
+# Populate only — do NOT process sort-cpp's CMakeLists.txt.
+# sort-cpp uses ${CMAKE_PROJECT_NAME} for its add_executable(), which collides
+# with our "Camera" target, and uses plain target_link_libraries() which
+# conflicts with our keyword-style usage.
+FetchContent_GetProperties(sort_cpp)
+if(NOT sort_cpp_POPULATED)
+    FetchContent_Populate(sort_cpp)
+endif()
+
+file(GLOB SORT_SOURCES "${sort_cpp_SOURCE_DIR}/src/*.cpp")
+list(FILTER SORT_SOURCES EXCLUDE REGEX ".*main\\.cpp$")
+add_library(sort_lib STATIC ${SORT_SOURCES})
+target_include_directories(sort_lib PUBLIC "${sort_cpp_SOURCE_DIR}/include")
+target_link_libraries(sort_lib PUBLIC ${OpenCV_LIBS})
+
 set(SOURCES
     src/main.cpp
     src/camera.cpp
     src/engine.cpp
     src/detector.cpp
     src/utils.cpp
+    src/tracker.cpp
 )
 
 set(HEADERS
@@ -37,6 +59,7 @@ set(HEADERS
     include/engine.hpp
     include/detector.hpp
     include/utils.hpp
+    include/tracker.hpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -46,12 +69,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${TENSORRT_INCLUDE_DIR}
     ${CUDAToolkit_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include
+    ${sort_cpp_SOURCE_DIR}/include
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${OpenCV_LIBS}
     ${TENSORRT_LIBRARY}
     CUDA::cudart
+    sort_lib
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
