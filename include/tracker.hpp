@@ -1,5 +1,9 @@
 #pragma once
 
+// sort-cpp hard-codes iou_threshold=0.3 (AssociateDetectionsToTrackers default) and
+// kMaxCoastCycles=1 (utils.h); Tracker::Run() exposes no API to override either at
+// runtime, so both parameters are inoperative here and have been removed.
+
 #include <vector>
 
 #include <opencv2/core.hpp>
@@ -16,14 +20,12 @@ struct TrackedDetection {
 
 class SORTTracker {
    public:
-    explicit SORTTracker(int max_age = 200, int min_hits = 1, float iou_threshold = 0.5F);
+    explicit SORTTracker(int min_hits = 1);
     ~SORTTracker() = default;
 
     std::vector<TrackedDetection> Update(const std::vector<Detection>& detections);
 
    private:
     Tracker tracker_;
-    int max_age_;
     int min_hits_;
-    float iou_threshold_;
 };
