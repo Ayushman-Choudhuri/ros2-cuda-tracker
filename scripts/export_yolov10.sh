@@ -4,7 +4,7 @@
 #
 # Requirements:
 #   - Python 3 with pip
-#   - ultralytics >= 8.2  (auto-installed if missing)
+#   - ultralytics >= 8.2  (pre-installed in devcontainer image)
 #   - trtexec on PATH (ships with TensorRT; in the devcontainer at /usr/src/tensorrt/bin/trtexec)
 #
 # Usage:
@@ -91,12 +91,8 @@ require_cmd trtexec \
 mkdir -p "$PT_DIR" "$ONNX_DIR" "$ENGINE_DIR"
 
 if ! $SKIP_ONNX; then
-    log "Checking ultralytics …"
-    if ! python3 -c "import ultralytics" &>/dev/null; then
-        log "ultralytics not found — installing …"
-        python3 -m pip install --quiet "ultralytics>=8.2"
-    fi
-    ULTRALYTICS_VER=$(python3 -c "import ultralytics; print(ultralytics.__version__)")
+    ULTRALYTICS_VER=$(python3 -c "import ultralytics; print(ultralytics.__version__)" 2>/dev/null) \
+        || die "ultralytics not found. Rebuild the devcontainer image."
     log "ultralytics $ULTRALYTICS_VER"
 fi
 
