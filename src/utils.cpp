@@ -128,11 +128,11 @@ void DrawTrackedDetections(cv::Mat& frame, const std::vector<TrackedDetection>& 
                     ? names[track.class_id]
                     : "cls" + std::to_string(track.class_id);
             std::ostringstream label_stream;
-            label_stream << class_name << " #" << track.track_id << ' '
+            label_stream << class_name << " id: " << track.track_id << " conf: "
                          << std::fixed << std::setprecision(2) << track.confidence;
             label = label_stream.str();
         } else {
-            label = "#" + std::to_string(track.track_id);
+            label = "id: " + std::to_string(track.track_id);
         }
 
         DrawLabel(frame, bbox, label, color);
