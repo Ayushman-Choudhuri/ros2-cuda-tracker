@@ -28,7 +28,7 @@ int main() {
         return 1;
     }
 
-    SORTTracker tracker;
+    ByteTracker tracker;
 
     std::cout << "Running. Press 'q' or ESC to quit.\n";
     cv::namedWindow("Person Tracking", cv::WINDOW_AUTOSIZE);
