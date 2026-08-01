@@ -27,5 +27,9 @@ libgtk-3-dev
 libgstreamer1.0-dev
 libgstreamer-plugins-base1.0-dev
 
-# Eigen3 (required by sort-cpp Kalman filter)
+# Eigen3 (required by the ByteTrack Kalman filter)
 libeigen3-dev
+
+# GoogleTest (CMake falls back to FetchContent if absent)
+libgtest-dev
+libgmock-dev

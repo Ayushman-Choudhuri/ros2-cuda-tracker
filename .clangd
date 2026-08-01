@@ -4,4 +4,5 @@ CompileFlags:
     - -isystem/usr/local/cuda/targets/x86_64-linux/include
     - -isystem/usr/include/x86_64-linux-gnu
     - -I./include
+    - -I./include/tracker
     - -std=c++17

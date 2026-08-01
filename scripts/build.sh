@@ -21,4 +21,4 @@ ln -sf "$BUILD_DIR/compile_commands.json" "$PROJECT_ROOT/compile_commands.json"
 cmake --build "$BUILD_DIR" --parallel "$(nproc)"
 
 echo ""
-echo "Executable: $BUILD_DIR/bin/Camera"
+echo "Executable: $BUILD_DIR/bin/tracker"
