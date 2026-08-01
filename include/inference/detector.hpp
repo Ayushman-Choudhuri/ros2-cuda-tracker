@@ -14,27 +14,19 @@ namespace vision {
         int class_id = -1;
     };
 
-    inline constexpr int kAllClasses = -1;
-
-    struct DetectorConfig {
-        std::string engine_path;
-        float confidence_threshold = 0.25F;
-        int input_width = 640;
-        int input_height = 640;
-        int target_class_id = kAllClasses;
-    };
-
-    // Runs a YOLOv10 engine end to end: letterbox on the CPU, inference on the GPU,
-    // then decode the NMS-free head back into image coordinates.
     class Detector {
        public:
-        explicit Detector(const DetectorConfig& config);
+        static constexpr int kAllClasses = -1;
+
+        Detector(const std::string& engine_path,
+                 float confidence_threshold,
+                 int input_width,
+                 int input_height,
+                 int target_class_id = kAllClasses);
 
         std::vector<Detection> Detect(const cv::Mat& image);
 
        private:
-        // Maps image coordinates onto the square network input: the image is scaled
-        // to fit and centred, so undoing it means removing the padding then the scale.
         struct Letterbox {
             float scale = 1.0F;
             cv::Size scaled_size;
@@ -56,4 +48,4 @@ namespace vision {
         int target_class_id_;
     };
 
-}  // namespace vision
+} 

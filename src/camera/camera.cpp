@@ -1,8 +1,9 @@
 #include "camera/camera.hpp"
 
-#include <iostream>
 #include <stdexcept>
 #include <string>
+
+#include "utils/logger.hpp"
 
 namespace vision {
 
@@ -16,10 +17,10 @@ namespace vision {
         camera_handle_->set(cv::CAP_PROP_FRAME_HEIGHT, frame_height);
         Warmup();
 
-        std::cout << "[Camera] device " << device_id << " | "
-                  << camera_handle_->get(cv::CAP_PROP_FRAME_WIDTH) << "x"
-                  << camera_handle_->get(cv::CAP_PROP_FRAME_HEIGHT) << " | " << current_fps_
-                  << " fps\n";
+        LOG_INFO("Camera") << "device " << device_id << " | "
+                           << camera_handle_->get(cv::CAP_PROP_FRAME_WIDTH) << "x"
+                           << camera_handle_->get(cv::CAP_PROP_FRAME_HEIGHT) << " | "
+                           << current_fps_ << " fps";
     }
 
     cv::Mat Camera::GetFrame() {
@@ -52,4 +53,4 @@ namespace vision {
         last_frame_tick_ = current_tick;
     }
 
-}
+}  // namespace vision

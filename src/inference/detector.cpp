@@ -25,14 +25,18 @@ namespace vision {
         // the same value doubles as the fill for the letterbox border.
         const cv::Scalar kZeroPixel(0, 0, 0);
 
-    }
+    }  // namespace
 
-    Detector::Detector(const DetectorConfig& config)
-        : engine_(config.engine_path),
-          input_width_(config.input_width),
-          input_height_(config.input_height),
-          confidence_threshold_(config.confidence_threshold),
-          target_class_id_(config.target_class_id) {
+    Detector::Detector(const std::string& engine_path,
+                       float confidence_threshold,
+                       int input_width,
+                       int input_height,
+                       int target_class_id)
+        : engine_(engine_path),
+          input_width_(input_width),
+          input_height_(input_height),
+          confidence_threshold_(confidence_threshold),
+          target_class_id_(target_class_id) {
     }
 
     std::vector<Detection> Detector::Detect(const cv::Mat& image) {
@@ -62,17 +66,23 @@ namespace vision {
         resized.copyTo(
             padded(cv::Rect(cv::Point(letterbox.pad_x, letterbox.pad_y), letterbox.scaled_size)));
 
-        return cv::dnn::blobFromImage(padded, kPixelToUnitScale,
-                                      cv::Size(input_width_, input_height_), kZeroPixel,
-                                      /*swapRB=*/true, /*crop=*/false, CV_32F);
+        return cv::dnn::blobFromImage(padded,
+                                      kPixelToUnitScale,
+                                      cv::Size(input_width_, input_height_),
+                                      kZeroPixel,
+                                      /*swapRB=*/true,
+                                      /*crop=*/false,
+                                      CV_32F);
     }
 
     Detector::Letterbox Detector::UploadImage(const cv::Mat& image) {
         const Letterbox letterbox = ComputeLetterbox(image.size());
         const cv::Mat blob = MakeInputBlob(image, letterbox);
 
-        ThrowOnCudaError(cudaMemcpy(engine_.GetInputBuffer(), blob.ptr<float>(),
-                                    blob.total() * sizeof(float), cudaMemcpyHostToDevice),
+        ThrowOnCudaError(cudaMemcpy(engine_.GetInputBuffer(),
+                                    blob.ptr<float>(),
+                                    blob.total() * sizeof(float),
+                                    cudaMemcpyHostToDevice),
                          "cudaMemcpy of input blob");
         return letterbox;
     }
@@ -90,14 +100,19 @@ namespace vision {
         void* host_destination = is_half ? static_cast<void*>(half_output.data()) : output.data();
         const size_t byte_count = value_count * (is_half ? sizeof(__half) : sizeof(float));
 
-        ThrowOnCudaError(cudaMemcpyAsync(host_destination, engine_.GetOutputBuffer(), byte_count,
-                                         cudaMemcpyDeviceToHost, engine_.GetStream()),
+        ThrowOnCudaError(cudaMemcpyAsync(host_destination,
+                                         engine_.GetOutputBuffer(),
+                                         byte_count,
+                                         cudaMemcpyDeviceToHost,
+                                         engine_.GetStream()),
                          "cudaMemcpyAsync of output tensor");
         ThrowOnCudaError(cudaStreamSynchronize(engine_.GetStream()), "cudaStreamSynchronize");
 
         if (is_half) {
-            std::transform(half_output.begin(), half_output.end(), output.begin(),
-                           [](__half value) { return __half2float(value); });
+            std::transform(
+                half_output.begin(), half_output.end(), output.begin(), [](__half value) {
+                    return __half2float(value);
+                });
         }
         return output;
     }
