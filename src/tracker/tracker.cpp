@@ -1,6 +1,6 @@
 #include <opencv2/imgproc.hpp>
 
-#include "tracker/object_tracker.hpp"
+#include "tracker/tracker.hpp"
 
 namespace vision {
     namespace {

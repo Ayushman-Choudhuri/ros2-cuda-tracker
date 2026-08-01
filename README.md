@@ -53,8 +53,8 @@ All application code lives in namespace `vision`.
 ```
 include/
   camera/           camera.hpp
-  inference/        tensorrt_engine.hpp, detector.hpp
-  tracker/          object_tracker.hpp, bytetrack/ (vendored)
+  inference/        engine.hpp, detector.hpp
+  tracker/          tracker.hpp, bytetrack/ (vendored)
   utils/            logger.hpp, visualization.hpp
 src/
   main.cpp
@@ -80,7 +80,7 @@ startup, so verbosity is a container env var rather than a rebuild.
 Three CMake targets: `bytetrack` (vendored tracker, no GPU dependencies), `vision`
 (the pipeline), and the `tracker` executable.
 
-Every CUDA call goes through `ThrowOnCudaError` (`include/inference/tensorrt_engine.hpp`).
+Every CUDA call goes through `ThrowOnCudaError` (`include/inference/engine.hpp`).
 Construction either yields a working object or throws — there are no `IsInitialized()`
 probes.
 

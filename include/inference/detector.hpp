@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "inference/tensorrt_engine.hpp"
+#include "inference/engine.hpp"
 
 namespace vision {
 

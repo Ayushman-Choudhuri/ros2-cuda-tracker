@@ -10,9 +10,6 @@
 
 namespace byte_track {
 
-    // ByteTrack (https://arxiv.org/abs/2110.06864): associate high-confidence
-    // detections first, then recover occluded targets from the low-confidence
-    // detections that a single-threshold tracker would have thrown away.
     class ByteTracker {
        public:
         using STrackPtr = std::shared_ptr<STrack>;
@@ -31,8 +28,6 @@ namespace byte_track {
             std::vector<size_t> unmatched_detections;
         };
 
-        // What happened to tracks during a single frame, before it is folded back
-        // into the tracker's persistent state.
         struct FrameTracks {
             std::vector<STrackPtr> activated;
             std::vector<STrackPtr> refound;
@@ -101,4 +96,4 @@ namespace byte_track {
         std::vector<STrackPtr> removed_stracks_;
     };
 
-}  // namespace byte_track
+}

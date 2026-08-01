@@ -3,7 +3,7 @@
 #include <opencv2/core.hpp>
 #include <vector>
 
-#include "tracker/object_tracker.hpp"
+#include "tracker/tracker.hpp"
 
 namespace vision {
 

@@ -6,7 +6,7 @@
 
 #include "camera/camera.hpp"
 #include "inference/detector.hpp"
-#include "tracker/object_tracker.hpp"
+#include "tracker/tracker.hpp"
 #include "utils/logger.hpp"
 #include "utils/visualization.hpp"
 

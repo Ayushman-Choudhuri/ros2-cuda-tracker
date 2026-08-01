@@ -2,7 +2,7 @@
 #include <fstream>
 #include <stdexcept>
 
-#include "inference/tensorrt_engine.hpp"
+#include "inference/engine.hpp"
 #include "utils/logger.hpp"
 
 namespace vision {
