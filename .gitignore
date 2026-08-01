@@ -1,4 +1,26 @@
-build
-graphify-out/
+# Build output
+build/
+build-host/
+.cache/
+compile_commands.json
 
-models/
+# Model weights — too large for git. Only the small portable ONNX is tracked;
+# .pt checkpoints and SM-specific .engine files are rebuilt locally.
+models/*
+!models/onnx/
+models/onnx/*
+!models/onnx/yolov10n.onnx
+
+# Local tooling / working notes
+.claude/
+graphify-out/
+docs/
+CLAUDE.md
+
+# Secrets
+.env
+.env.*
+
+# Editor / OS
+*.swp
+.DS_Store

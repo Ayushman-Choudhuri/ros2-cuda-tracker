@@ -2,6 +2,9 @@ BasedOnStyle: Google
 IndentWidth: 4
 ColumnLimit: 100
 
+# Namespace bodies are indented so nesting depth is visible at a glance.
+NamespaceIndentation: All
+
 # Short constructs — expand for readability
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
@@ -16,3 +19,7 @@ SortIncludes: CaseSensitive
 # Comments
 ReflowComments: true
 SpacesBeforeTrailingComments: 2
+
+# One argument per line when a call wraps — no bin-packing.
+BinPackArguments: false
+BinPackParameters: false

@@ -5,6 +5,7 @@
             "compileCommands": "${workspaceFolder}/compile_commands.json",
             "includePath": [
                 "${workspaceFolder}/include",
+                "${workspaceFolder}/include/tracker",
                 "/usr/include/opencv4",
                 "/usr/local/cuda/targets/x86_64-linux/include",
                 "/usr/include/x86_64-linux-gnu"

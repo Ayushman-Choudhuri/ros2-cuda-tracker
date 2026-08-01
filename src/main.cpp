@@ -1,55 +1,85 @@
-#include <iostream>
+#include <exception>
 #include <opencv2/core/utils/logger.hpp>
 #include <opencv2/highgui.hpp>
+#include <string>
+#include <vector>
 
-#include "camera.hpp"
-#include "detector.hpp"
-#include "tracker.hpp"
-#include "utils.hpp"
+#include "camera/camera.hpp"
+#include "inference/detector.hpp"
+#include "tracker/tracker.hpp"
+#include "utils/logger.hpp"
+#include "utils/visualization.hpp"
 
-constexpr int kDefaultDeviceId = 4;
-const std::string kEnginePath = "models/engine/yolov10x_fp16.engine";
-constexpr float kConfThreshold = 0.1F;
-constexpr int kModelInputSize = 640;
-constexpr int kPersonClassId = 0;  // COCO class 0
+namespace {
+
+    constexpr int kCameraDeviceId = 4;
+    const std::string kEnginePath = "models/engine/yolov10x_fp16.engine";
+    constexpr int kModelInputSize = 640;
+    constexpr int kPersonClassId = 0;
+
+    // ByteTrack's own thresholds decide what becomes a
+    // track, and its second association pass needs the low-confidence detections a
+    // stricter detector threshold would discard.
+    constexpr float kDetectionConfidenceThreshold = 0.1F;
+
+    const std::string kWindowName = "Person Tracking";
+    constexpr int kEscapeKey = 27;
+    constexpr int kKeyPollMs = 1;
+
+    bool QuitRequested(int key) {
+        return key == 'q' || key == 'Q' || key == kEscapeKey;
+    }
+
+    void RunTrackingLoop(vision::Camera& camera,
+                         vision::Detector& detector,
+                         vision::ObjectTracker& tracker) {
+        cv::namedWindow(kWindowName, cv::WINDOW_AUTOSIZE);
+
+        while (true) {
+            cv::Mat frame = camera.GetFrame();
+
+            if (frame.empty()) {
+                LOG_ERROR("Main") << "Camera returned an empty frame, stopping.";
+                return;
+            }
+
+            const std::vector<vision::Detection> detections = detector.Detect(frame);
+            const std::vector<vision::TrackedDetection> tracks = tracker.Update(detections);
+
+            vision::DrawTracks(frame, tracks);
+            vision::DrawFps(frame, camera.GetFps());
+            cv::imshow(kWindowName, frame);
+
+            if (QuitRequested(cv::waitKey(kKeyPollMs))) {
+                return;
+            }
+        }
+    }
+
+}
 
 int main() {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
+    vision::Logger::SetLevelFromEnvironment();
 
-    std::cout << "Camera device : " << kDefaultDeviceId << '\n';
-    std::cout << "Engine        : " << kEnginePath << '\n';
+    try {
+        vision::Camera camera(kCameraDeviceId);
+        vision::Detector detector(kEnginePath,
+                                  kDetectionConfidenceThreshold,
+                                  kModelInputSize,
+                                  kModelInputSize,
+                                  kPersonClassId);
 
-    Camera webcam(kDefaultDeviceId);
+        vision::ObjectTracker tracker;
 
-    Detector detector(kEnginePath, kConfThreshold, kModelInputSize, kModelInputSize, kPersonClassId);
+        LOG_INFO("Main") << "Running. Press 'q' or ESC to quit.";
 
-    if (!detector.IsInitialized()) {
-        std::cerr << "Detector failed to initialize.\n";
-        return 1;
+        RunTrackingLoop(camera, detector, tracker);
     }
 
-    SORTTracker tracker;
-
-    std::cout << "Running. Press 'q' or ESC to quit.\n";
-    cv::namedWindow("Person Tracking", cv::WINDOW_AUTOSIZE);
-
-    while (true) {
-        cv::Mat frame = webcam.GetFrame();
-        if (frame.empty()) {
-            std::cerr << "Empty frame — stopping.\n";
-            break;
-        }
-
-        std::vector<Detection> detections = detector.Infer(frame);
-        std::vector<TrackedDetection> tracks = tracker.Update(detections);
-        DrawTrackedDetections(frame, tracks);
-        DrawFps(frame, webcam.GetFps());
-
-        cv::imshow("Person Tracking", frame);
-        int key = cv::waitKey(1);
-        if (key == 'q' || key == 'Q' || key == 27) {
-            break;
-        }
+    catch (const std::exception& error) {
+        LOG_FATAL("Main") << error.what();
+        return 1;
     }
 
     cv::destroyAllWindows();
