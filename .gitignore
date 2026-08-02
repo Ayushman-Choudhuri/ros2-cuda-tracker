@@ -4,6 +4,12 @@ build-host/
 .cache/
 compile_commands.json
 
+# colcon workspace artifacts. colcon drops a log/ into whatever cwd it is invoked
+# from, so that one is matched at any depth rather than only under ros2_ws/.
+ros2_ws/build/
+ros2_ws/install/
+log/
+
 # Model weights — too large for git. Only the small portable ONNX is tracked;
 # .pt checkpoints and SM-specific .engine files are rebuilt locally.
 models/*
