@@ -57,9 +57,19 @@ CheckOptions:
     value: lower_case
   - key: readability-identifier-naming.ConstantMemberSuffix
     value: _
-  # Cap function cognitive complexity
+  # Cap function cognitive complexity. IgnoreMacros because ROS's RCLCPP_* macros
+  # expand into branches and loops that are not the caller's complexity: without it
+  # a three-`if` validator scores 139.
   - key: readability-function-cognitive-complexity.Threshold
     value: '25'
+  - key: readability-function-cognitive-complexity.IgnoreMacros
+    value: 'true'
+  # 'c' is a variable inside the RCLCPP_*_THROTTLE expansion, not ours.
+  - key: readability-identifier-length.IgnoredVariableNames
+    value: '^c$'
 
-HeaderFilterRegex: '.*'
+# Our headers only. '.*' also swept in the rosidl-generated message headers under
+# ros2_ws/build/, which are not ours to fix and buried real findings 64-to-0.
+# 'src/cuda_tracker/' appears in the source tree but not the generated one.
+HeaderFilterRegex: '.*/src/cuda_tracker/(include|src|test)/.*'
 WarningsAsErrors: ''
