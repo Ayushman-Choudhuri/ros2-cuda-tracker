@@ -14,8 +14,6 @@ namespace byte_track {
         kRemoved,
     };
 
-    // One tracked target: a Kalman-filtered box plus the bookkeeping ByteTrack needs
-    // to decide whether it is still alive.
     class STrack {
        public:
         STrack(const Rect& rect, float score, int label);

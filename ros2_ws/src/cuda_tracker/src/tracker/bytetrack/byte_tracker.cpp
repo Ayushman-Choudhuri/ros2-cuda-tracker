@@ -1,8 +1,7 @@
 // Adapted from ByteTrack-cpp (https://github.com/Vertical-Beach/ByteTrack-cpp),
-// MIT License. See LICENSE in this directory. The association pipeline was
-// restructured into one function per stage of the algorithm and the raw LAPJV
-// buffer handling replaced with owning containers; the tracking result is
-// unchanged.
+// MIT License. See LICENSE in this directory. The association pipeline was split
+// into one function per stage and the raw LAPJV buffers replaced with owning
+// containers; the tracking result is unchanged.
 
 #include "bytetrack/byte_tracker.hpp"
 
@@ -22,8 +21,6 @@ namespace byte_track {
         constexpr float kLowScoreMatchThresh = 0.5F;
         constexpr float kUnconfirmedMatchThresh = 0.7F;
 
-        // Two tracks describing the same target overlap almost perfectly, which is an
-        // IoU distance close to zero.
         constexpr float kDuplicateIouDistance = 0.15F;
 
         constexpr double kReferenceFrameRate = 30.0;
@@ -328,8 +325,8 @@ namespace byte_track {
         return result;
     }
 
-    // A target briefly split into two tracks leaves near-identical boxes in the
-    // tracked and lost lists. Keep whichever has been alive longer.
+    // A target briefly split into two tracks leaves near-identical boxes in the tracked
+    // and lost lists. Keep whichever has been alive longer.
     void ByteTracker::RemoveDuplicateTracks(std::vector<STrackPtr>& tracked,
                                             std::vector<STrackPtr>& lost) {
         const std::vector<std::vector<float>> distances = CalcIouDistances(tracked, lost);

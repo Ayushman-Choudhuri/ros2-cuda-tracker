@@ -3,7 +3,7 @@
 namespace byte_track {
     namespace {
 
-        // The Kalman filter measures a box as (center_x, center_y, aspect_ratio, height).
+        // xyah: the (center_x, center_y, aspect_ratio, height) the filter measures.
         KalmanFilter::DetectBox RectToXyah(const Rect& rect) {
             KalmanFilter::DetectBox xyah;
             xyah << rect.CenterX(), rect.CenterY(), rect.AspectRatio(), rect.Height();
@@ -57,8 +57,8 @@ namespace byte_track {
         SyncRectFromState();
 
         state_ = TrackState::kTracked;
-        // Tracks born on the very first frame have nothing to corroborate them
-        // against, so they are trusted immediately instead of waiting a frame.
+        // Tracks born on the very first frame have nothing to corroborate them against,
+        // so they are trusted immediately instead of waiting a frame.
         is_activated_ = frame_id == 1;
         track_id_ = track_id;
         frame_id_ = frame_id;
