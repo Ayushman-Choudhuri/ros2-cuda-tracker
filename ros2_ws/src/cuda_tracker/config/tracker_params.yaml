@@ -1,0 +1,44 @@
+# Node runs in the global namespace under the name tracker_node, so this is the
+# matching parameter key. Change both together if the launch file renames it.
+/tracker_node:
+  ros__parameters:
+
+    # camera: open a V4L2 device directly. topic: subscribe to image_topic.
+    input_source: "camera"
+
+    camera:
+      device_id: 4
+      frame_width: 640
+      frame_height: 480
+
+    # Subscribed in topic mode, unused in camera mode.
+    image_topic: "image_raw"
+
+    # Capture timer rate. Ignored in topic mode, where the publisher sets the pace.
+    publish_rate_hz: 30.0
+
+    frame_id: "camera_optical_frame"
+
+    # SM-architecture-specific, never committed. Build it with trtexec on the machine
+    # that will run it. Relative paths resolve against the repository root, not the
+    # process cwd — give an absolute path to point outside the repo.
+    engine_path: "models/engine/yolov10n_fp16.engine"
+
+    # Letterbox target. Must equal the engine's input tensor; the node throws on
+    # configure if it does not. models/onnx/yolov10n.onnx is exported at 800x800,
+    # not the more common 640.
+    model_input_size: 800
+
+    # Deliberately low. ByteTrack's second association pass consumes the
+    # 0.1-0.5 band, so this is the tracking floor, not a display filter.
+    confidence_threshold: 0.1
+
+    # COCO class filter. 0 is person; -1 accepts every class.
+    target_class_id: 0
+
+    tracker:
+      frame_rate: 30
+      track_buffer: 30
+      track_thresh: 0.5
+      high_thresh: 0.6
+      match_thresh: 0.8

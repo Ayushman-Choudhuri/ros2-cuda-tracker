@@ -1,5 +1,5 @@
 {
-    "name": "ros2-deepstream-object-tracking",
+    "name": "ros2-cuda-tracker",
     "dockerComposeFile": "docker-compose.yml",
     "service": "devcontainer",
     "workspaceFolder": "/workspace",
@@ -14,7 +14,7 @@
                 "llvm-vs-code-extensions.vscode-clangd"
             ],
             "settings": {
-                "cmake.buildDirectory": "${workspaceFolder}/build",
+                "cmake.buildDirectory": "${workspaceFolder}/ros2_ws/build",
                 "cmake.generator": "Ninja",
                 "C_Cpp.default.cppStandard": "c++17",
                 "C_Cpp.default.compilerPath": "/usr/bin/g++",

@@ -147,17 +147,21 @@ bool IsOpened() const;
 double GetFps() const;
 ```
 
-#### Standard: C++23
+#### Standard: C++17
 
-All new code targets C++23. Use modern features where they improve clarity (`std::format`, ranges, `[[nodiscard]]`, etc.).
+All new code targets C++17 — the default for ROS 2 Humble, which the package builds
+against. Use modern features where they improve clarity (`[[nodiscard]]`, structured
+bindings, `std::optional`, etc.). Note that C++20/23 additions such as `std::format`
+and ranges are **not** available.
 
 ---
 
 ## Build
 
 ```bash
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
-cmake --build build
+source /opt/ros/humble/setup.bash
+colcon build --base-paths ros2_ws --build-base ros2_ws/build \
+             --install-base ros2_ws/install --symlink-install
 ```
 
 Use the devcontainer for camera access — it mounts `/dev` and the X11 socket.

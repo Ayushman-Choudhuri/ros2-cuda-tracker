@@ -1,19 +1,19 @@
 #!/bin/bash
 set -e
 
-OPENCV_CMAKE_DIR=$(find /usr/lib -type d -name "opencv4" -path "*/cmake/*" 2>/dev/null | head -1)
-if [[ -z "${OPENCV_CMAKE_DIR}" ]]; then
-    echo "ERROR: opencv4 cmake directory not found" >&2
-    exit 1
+if ! grep -q '/opt/ros/humble/setup.bash' "${HOME}/.bashrc"; then
+    echo "source /opt/ros/humble/setup.bash" >> "${HOME}/.bashrc"
+fi
+# Source the workspace overlay too, so `ros2 launch cuda_tracker ...` works in a
+# fresh shell without the user having to remember it.
+if ! grep -q '/workspace/ros2_ws/install/setup.bash' "${HOME}/.bashrc"; then
+    echo "[ -f /workspace/ros2_ws/install/setup.bash ] && source /workspace/ros2_ws/install/setup.bash" \
+        >> "${HOME}/.bashrc"
 fi
 
-rm -rf /workspace/build
+source /opt/ros/humble/setup.bash
 
-cmake \
-    -S /workspace \
-    -B /workspace/build \
-    -G Ninja \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -DOpenCV_DIR="${OPENCV_CMAKE_DIR}"
-
-cmake --build /workspace/build
+colcon build --base-paths /workspace/ros2_ws \
+             --build-base /workspace/ros2_ws/build \
+             --install-base /workspace/ros2_ws/install \
+             --symlink-install
